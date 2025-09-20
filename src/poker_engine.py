@@ -141,8 +141,10 @@ class Deck:
         cards_to_show = min(5, len(self.cards))
         card_str = ', '.join(str(card) for card in self.cards[:cards_to_show])
 
-        if len(self.cards) > 5:
-            return f"Deck ({len(self.cards)} cards): {card_str})"
+        if len(self.cards) > cards_to_show:
+            return f"Deck ({len(self.cards)} cards): {card_str}, ..."
+        else:
+            return f"Deck ({len(self.cards)} cards): {card_str}"
 
 
     def deal(self) -> Card:
