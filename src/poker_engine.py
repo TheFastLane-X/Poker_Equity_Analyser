@@ -116,7 +116,7 @@ class Deck:
         """
         Initialise a full 52 deck card and shuffle it
         """
-
+        
         self.cards = [Card(rank, suit) for suit in Suit for rank in Rank]
         self.shuffle()
     
@@ -165,8 +165,7 @@ class Deck:
 
     def deal_to_players(self, num_players: int, cards_per_player: int = 2) -> list[list[Card]]:
         """
-        Deals cards to players one by one (No button for now)
-
+        Deals cards to players one by one 
         Args:
             num_players (int): number of players to deal cards to
             cards_per_player (int, optional): Number of cards to deal to players. Defaults to 2.
