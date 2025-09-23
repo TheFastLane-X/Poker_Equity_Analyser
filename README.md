@@ -1,7 +1,7 @@
 # Poker Equity Analyser
 
 ![Development Status](https://img.shields.io/badge/status-active%20development-yellow)
-![Python](https://img.shields.io/badge/python-3.8+-blue)
+![Python](https://img.shields.io/badge/python-3.10+-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 
