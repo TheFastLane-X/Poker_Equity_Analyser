@@ -23,8 +23,8 @@ This project implements a poker decision engine that calculates hand equity (win
 ### Core Implementation
 
 - ✅ Card and Deck classes 
-- ✅Hand evaluator
-- Monte Carlo engine
+- ✅ Hand evaluator
+- ✅ Monte Carlo engine
 - Pot odds calculator
 
 ### Future Development
