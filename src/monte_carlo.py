@@ -7,6 +7,7 @@ Estimates win probability by simulating thousands of random outcomes.
 
 from typing import List, Tuple, Dict, Optional
 import random
+import time
 from .poker_engine import Card, Deck
 from .hand_evaluator import HandEvaluator
 
@@ -21,7 +22,8 @@ class MonteCarloSimulator:
         player_cards: List[Card],
         community_cards: Optional[List[Card]] = None,
         num_opponents: int = 1,
-        iterations: int = 10000
+        iterations: int = 10000,
+        measure_time: bool = False
     ) -> Dict[str, float]:
         """
         Calculate win/tie/loss percentages for given cards.
@@ -35,6 +37,8 @@ class MonteCarloSimulator:
             Number of opponents
         iterations : int, default=10000
             Number of simulations to run
+        measure_time : bool, default=False
+            Whether to measure and return execution time
             
         Returns:
         Dict[str, float]
@@ -51,6 +55,10 @@ class MonteCarloSimulator:
         ties = 0
         losses = 0
         
+        # Start timing if requested
+        if measure_time:
+            start_time = time.perf_counter()
+
         for _ in range(iterations):
             # Create fresh deck
             deck = Deck()
@@ -109,6 +117,13 @@ class MonteCarloSimulator:
         
         results = {'win': wins / iterations, 'tie': ties / iterations, 'loss': losses / iterations}
         
+        # Add timing information if requested
+        if measure_time:
+            end_time = time.perf_counter()
+            elapsed_time = end_time - start_time
+            results['time_seconds'] = elapsed_time
+            results['iterations_per_second'] = iterations / elapsed_time
+
         return results
             
     
@@ -117,7 +132,8 @@ class MonteCarloSimulator:
         player_cards: List[Card],
         opponent_range: List[Tuple[Card, Card]],
         community_cards: Optional[List[Card]] = None,
-        iterations_per_hand: int = 1000
+        iterations_per_hand: int = 1000,
+        measure_time: bool = False
     ) -> Dict[str, float]:
         """
         Calculate equity against specific opponent range.
@@ -131,6 +147,8 @@ class MonteCarloSimulator:
             Known community cards
         iterations_per_hand : int
             Iterations per opponent hand
+        measure_time : bool, default=False
+            Whether to measure and return execution time    
             
         Returns:
         Dict[str, float]
@@ -143,7 +161,12 @@ class MonteCarloSimulator:
         wins = 0
         ties = 0
         losses = 0
-        
+        total_iterations = 0
+
+        # Start timing if requested
+        if measure_time:
+            start_time = time.perf_counter()
+
         for opp_hand in opponent_range:
             # Check if this opponent hand conflicts with known cards
             opp_cards = list(opp_hand)  # Convert tuple to list
@@ -163,6 +186,7 @@ class MonteCarloSimulator:
             
             # Run iterations for this specific opponent hand
             for _ in range(iterations_per_hand):
+                total_iterations += 1
                 deck = Deck()
                 
                 # Remove all known cards
@@ -202,5 +226,13 @@ class MonteCarloSimulator:
             return {'win': 0.0, 'tie': 0.0, 'loss': 0.0}
 
         results = {'win': wins / total, 'tie': ties / total, 'loss': losses/ total}
+
+        # Add timing information only if requested
+        if measure_time:
+            end_time = time.perf_counter()
+            elapsed_time = end_time - start_time
+            results['time_seconds'] = elapsed_time
+            results['iterations_per_second'] = total_iterations / elapsed_time if elapsed_time > 0 else 0 
+            results['total_iterations'] = total_iterations
 
         return results
