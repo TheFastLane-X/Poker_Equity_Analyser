@@ -203,7 +203,8 @@ class HandEvaluator:
         """
         Compare two evaluated hands.
         
-        Parameters:
+        Parameters:l#
+
         hand1 : Tuple[HandRank, List[int]]
             First hand (rank, tiebreakers)
         hand2 : Tuple[HandRank, List[int]]
