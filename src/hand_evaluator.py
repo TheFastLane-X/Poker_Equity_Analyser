@@ -219,7 +219,7 @@ class HandEvaluator:
         elif hand1[0] < hand2[0]:
             return -1
         
-        # Same hand rank, compare tiebreakers
+        # Same hand rank, compare tiebreakers t1 and t2
         for t1, t2 in zip(hand1[1], hand2[1]):
             if t1 > t2:
                 return 1
@@ -227,3 +227,175 @@ class HandEvaluator:
                 return -1
             
         return 0
+
+    @staticmethod
+    def get_best_five_card_hand(cards: List['Card']) -> List['Card']:
+        """
+        Get the best 5-card hand from 5-7 cards.
+        
+        Parameters:
+        cards : List[Card]
+            5-7 cards to choose from
+            
+        Returns:
+        List[Card]
+            Best 5 cards that make the strongest hand
+        """
+
+        hand_rank, tiebreakers = HandEvaluator.evaluate_hand(cards)
+
+        match hand_rank:
+            case HandRank.ROYAL_FLUSH | HandRank.STRAIGHT_FLUSH:
+                # Find flush suit
+                suit_counts = Counter(card.suit for card in cards)
+                flush_suit = None
+                for suit, count in suit_counts.items():
+                    if count >= 5:
+                        flush_suit = suit
+                        break
+                
+                # Get only cards of flush suit
+                flush_cards = [card for card in cards if card.suit == flush_suit]
+                
+                # Now get the straight from these flush cards
+                straight_flush_cards = HandEvaluator._get_straight_cards(flush_cards, tiebreakers[0])
+                return straight_flush_cards
+    
+            case HandRank.FOUR_OF_A_KIND:
+                # Get ranks for four of a kind and kicker
+                quad_rank = tiebreakers[0]
+                kicker_rank = tiebreakers[1]
+                hand = []
+
+                # Get all 4 cards for quad
+                for card in cards:
+                    if card.rank == quad_rank:
+                        hand.append(card)
+                
+                # Get kicker
+                for card in cards:
+                     if card.rank == kicker_rank:
+                        hand.append(card)
+                        break
+                     
+                return hand
+            
+            case HandRank.FULL_HOUSE:
+                # Get ranks for the full house
+                triple_rank = tiebreakers[0]
+                pair_rank = tiebreakers[1]
+                hand = []
+
+                for card in cards:
+                    if card.rank == triple_rank:
+                        hand.append(card)
+                
+                pair_count = 0
+                for card in cards:
+                    if card.rank == pair_rank:
+                        hand.append(card)
+                        pair_count += 1
+
+                        if pair_count == 2:
+                            break
+
+                return hand
+
+            case HandRank.FLUSH:
+                # Find flush suit
+                suit_counts = Counter(card.suit for card in cards)
+                flush_suit = None
+                for suit, count in suit_counts.items():
+                    if count >= 5:
+                        flush_suit = suit
+                        break
+                
+                # Get all of cards of flush suit, sorted by rank
+                flush_cards = [card for card in cards if card.suit == flush_suit]
+                flush_cards = sorted(flush_cards, key=lambda card: card.rank, reverse=True)
+
+                return flush_cards[:5]
+                
+            case HandRank.STRAIGHT:
+                return HandEvaluator._get_straight_cards(cards, tiebreakers[0])
+            
+            case HandRank.THREE_OF_A_KIND:
+                hand = []
+                triple_rank = tiebreakers[0]
+                kickers_ranks = tiebreakers[1:]
+                for card in cards:
+                     if card.rank == triple_rank:
+                         hand.append(card)
+                
+
+                for card in cards:
+                    if card.rank in kickers_ranks:
+                        hand.append(card)
+                    if len(hand) == 5:
+                        break
+            
+                return hand
+            
+            case HandRank.TWO_PAIR:
+                hand = []
+                pair1_rank = tiebreakers[0]
+                pair2_rank = tiebreakers[1]
+                kicker_rank = tiebreakers[2]
+                kicker_count = 0
+
+                for card in cards:
+                    if card.rank == pair1_rank:
+                        hand.append(card)
+                    elif card.rank == pair2_rank:
+                        hand.append(card)
+                    elif card.rank == kicker_rank and kicker_count == 0:
+                        hand.append(card)
+                        kicker_count += 1
+                
+                return hand
+            
+            case HandRank.PAIR:
+                hand = []
+                pair_rank = tiebreakers[0]
+                kickers_rank = tiebreakers[1:]
+
+                for card in cards:
+                    if card.rank == pair_rank:
+                        hand.append(card)
+                    elif card.rank in kickers_rank:
+                        hand.append(card)
+
+                return hand
+            
+            case HandRank.HIGH_CARD:
+                sorted_cards = sorted(cards, key=lambda x: x.rank, reverse=True)
+                return sorted_cards[:5]
+
+            case _:
+                raise ValueError(f"Unhandled hand rank: {hand_rank}")
+
+
+    @staticmethod
+    def _get_straight_cards(cards: List['Card'], high_rank: int) -> List['Card']:
+        """
+        Get the cards that form a straight.
+
+        Returns:
+            List[Card]
+                returns a list of cards that form a straight
+        """
+        
+        if high_rank == 5:  # Wheel straight
+            target_ranks = [14, 2, 3, 4, 5]
+        else:
+            target_ranks = list(range(high_rank - 4, high_rank + 1))
+        
+        # Now find cards matching these ranks
+        straight_cards = []
+        for rank in target_ranks:
+            for card in cards:
+                if card.rank == rank:
+                    straight_cards.append(card)
+                    break  # Only need one card of each rank
+        
+        return straight_cards
