@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from src.poker_engine import Card, Deck, Rank, Suit
 from src.hand_evaluator import HandEvaluator, HandRank
 from src.monte_carlo import MonteCarloSimulator
+from src.strategy import StrategyCalculator
 
 
 def test_card_creation():
@@ -143,6 +144,90 @@ def test_monte_carlo_with_timing():
         print(f"{iterations:10d} | {results['time_seconds']:8.3f} | {results['iterations_per_second']:8.0f}")
 
 
+def test_strategy_calculator():
+    """
+    Test strategy and pot odds calculations.
+    """
+
+    print("\n=== Testing Strategy Calculator ===")
+    
+    # Test pot odds
+    pot_odds = StrategyCalculator.calculate_pot_odds(100, 25)
+    print(f"Pot odds for $100 pot, $25 call: {pot_odds:.2%}")
+    assert abs(pot_odds - 0.20) < 0.01  # Should be 20%
+    print("Pot odds calculation works")
+    
+    # Test EV calculation - profitable scenario
+    ev_profit = StrategyCalculator.calculate_ev(0.55, 100, 25)
+    print(f"EV with 55% equity, $100 pot, $25 call: ${ev_profit:.2f}")
+    assert ev_profit > 0  # Should be positive
+    print("Profitable EV calculation works")
+    
+    # Test EV calculation - unprofitable scenario
+    ev_loss = StrategyCalculator.calculate_ev(0.15, 100, 25)
+    print(f"EV with 15% equity, $100 pot, $25 call: ${ev_loss:.2f}")
+    assert ev_loss < 0  # Should be negative
+    print("Unprofitable EV calculation works")
+    
+    # Test breakeven equity
+    breakeven = StrategyCalculator.calculate_breakeven_equity(100, 25)
+    print(f"Breakeven equity for $100 pot, $25 call: {breakeven:.2%}")
+    assert abs(breakeven - pot_odds) < 0.001  # Should equal pot odds
+    print("Breakeven equity equals pot odds")
+    
+    # Test get_decision - strong hand should call
+    print("\n--- Testing Decision Making ---")
+    pocket_aces = [
+        Card(Rank.ACE, Suit.SPADES),
+        Card(Rank.ACE, Suit.HEARTS)
+    ]
+    
+    decision = StrategyCalculator.get_decision(
+        pocket_aces,
+        None,  # Pre-flop
+        pot_size=100,
+        call_amount=25,
+        iterations=1000  # Fewer iterations for faster test
+    )
+    
+    print(f"AA decision: {decision['action']} (equity: {decision['equity']:.2%}, EV: ${decision['ev']:.2f})")
+    assert decision['action'] == 'call'
+    assert decision['profitable']
+    print("Strong hand correctly calls")
+    
+    # Test get_decision - weak hand should fold
+    weak_hand = [
+        Card(Rank.TWO, Suit.HEARTS),
+        Card(Rank.SEVEN, Suit.CLUBS)
+    ]
+    
+    decision = StrategyCalculator.get_decision(
+        weak_hand,
+        None,
+        pot_size=100,
+        call_amount=50,  # Worse pot odds
+        iterations=1000
+    )
+    
+    print(f"27o decision: {decision['action']} (equity: {decision['equity']:.2%}, EV: ${decision['ev']:.2f})")
+    assert decision['action'] == 'fold'
+    assert not decision['profitable']
+    print("Weak hand correctly folds")
+    
+    # Test get_decision - check when free
+    decision = StrategyCalculator.get_decision(
+        pocket_aces,
+        None,
+        pot_size=100,
+        call_amount=0,  # Free to continue
+        iterations=1000
+    )
+    
+    print(f"Check decision: {decision['action']} (no bet to call)")
+    assert decision['action'] == 'check'
+    print("Correctly checks when free")
+
+
 def run_all_tests():
     """Run all tests."""
     print("=" * 50)
@@ -154,6 +239,7 @@ def run_all_tests():
     test_hand_evaluation()
     test_monte_carlo()
     test_monte_carlo_with_timing()
+    test_strategy_calculator()
     
     print("\n" + "=" * 50)
     print("ALL TESTS PASSED!")
