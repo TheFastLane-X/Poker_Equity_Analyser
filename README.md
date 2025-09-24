@@ -25,7 +25,7 @@ This project implements a poker decision engine that calculates hand equity (win
 - ✅ Card and Deck classes 
 - ✅ Hand evaluator
 - ✅ Monte Carlo engine
-- Pot odds calculator
+- ✅ Pot odds calculator
 
 ### Future Development
 
@@ -41,7 +41,7 @@ poker-equity-analyser/
 │   ├── poker_engine.py      # Core poker components
 │   ├── hand_evaluator.py    # Hand ranking algorithms
 │   ├── monte_carlo.py       # Simulation engine
-│   └── strategy.py          # GTO calculations
+│   └── strategy.py          # Pot odds calculations
 ├── tests/
 │   └── test_*.py           # Unit tests
 ├── examples/
