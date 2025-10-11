@@ -61,10 +61,10 @@ class StrategyCalculator:
         """
 
         total_pot = pot_size + call_amount
-        loss_pct = 1-equity
 
-        # EV = (win% * win amount) - (loss% * loss amount)
-        ev = (equity * total_pot) - (loss_pct * call_amount)
+        # EV = (win% * total_pot) - call_amount
+        # You always pay the call, but only win the pot equity% of the time
+        ev = (equity * total_pot) - call_amount
         
         return ev
     
