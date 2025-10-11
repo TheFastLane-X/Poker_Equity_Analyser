@@ -205,7 +205,7 @@ def test_strategy_calculator():
         weak_hand,
         None,
         pot_size=100,
-        call_amount=50,  # Worse pot odds
+        call_amount=100,  # Worse pot odds
         iterations=1000
     )
     
